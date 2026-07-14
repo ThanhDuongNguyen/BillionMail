@@ -50,3 +50,6 @@ IP_WHITELIST_ENABLE=false
 
 # Number of days to keep log backup
 RETENTION_DAYS=7
+
+# Custom core image (override with your Docker Hub image)
+# CORE_IMAGE=duongnt151099/billionmail-core:4.8.1-rbac
