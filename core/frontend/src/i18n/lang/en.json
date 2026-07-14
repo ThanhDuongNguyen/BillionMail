@@ -95,7 +95,10 @@
 			"service": "Service",
 			"logs": "Logs",
 			"operation_logs": "Operation Logs",
-			"error_logs": "Error Logs"
+			"error_logs": "Error Logs",
+			"users": "Users",
+			"accounts": "Accounts",
+			"roles": "Roles"
 		}
 	},
 	"login": {
@@ -1099,8 +1102,8 @@
 				"applyingCert": "Applying certificate, please wait...",
 				"settingDefault": "Setting default domain, please wait...",
 				"settingBrandInfo": "Setting domain brand info, please wait...",
-			"testingConnection": "Testing connection, please wait...",
-			"detecting": "Detecting, please wait..."
+				"testingConnection": "Testing connection, please wait...",
+				"detecting": "Detecting, please wait..."
 			}
 		}
 	},

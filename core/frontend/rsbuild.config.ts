@@ -76,7 +76,6 @@ export default defineConfig({
 				target: server.address,
 				secure: false,
 				changeOrigin: true,
-				pathRewrite: { '^/api': '' },
 			},
 		},
 	},

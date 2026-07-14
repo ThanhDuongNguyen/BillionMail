@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"billionmail-core/utility/types/api_v1"
+	api_v1 "billionmail-core/utility/types/api_v1"
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -22,11 +22,12 @@ type LoginRes struct {
 		RefreshToken string `json:"refreshToken" dc:"Refresh token"`
 		TTL          int64  `json:"ttl" dc:"Token lifetime (in seconds)"`
 		AccountInfo  struct {
-			Id       int64  `json:"id" dc:"Account ID"`
-			Username string `json:"username" dc:"Username"`
-			Email    string `json:"email" dc:"Email address"`
-			Status   int    `json:"status" dc:"Account status"`
-			Lang     string `json:"lang" dc:"Preferred language"`
+			Id       int64    `json:"id" dc:"Account ID"`
+			Username string   `json:"username" dc:"Username"`
+			Email    string   `json:"email" dc:"Email address"`
+			Status   int      `json:"status" dc:"Account status"`
+			Lang     string   `json:"lang" dc:"Preferred language"`
+			Roles    []string `json:"roles" dc:"User roles"`
 		} `json:"accountInfo" dc:"Basic account information"`
 	} `json:"data"`
 }
@@ -75,24 +76,24 @@ type GetValidateCodeRes struct {
 	} `json:"data"`
 }
 
-//// CurrentUserReq defines the request for getting current user info
-//type CurrentUserReq struct {
-//	g.Meta        `path:"/current-user" method:"get" tags:"Authentication" summary:"Get current user info" sm:"Get current user info" in:"query"`
-//	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
-//}
-//
-//// CurrentUserRes defines the response for getting current user info
-//type CurrentUserRes struct {
-//	api_v1.StandardRes
-//	Data struct {
-//		Account struct {
-//			Id       int64  `json:"id" dc:"Account ID"`
-//			Username string `json:"username" dc:"Username"`
-//			Email    string `json:"email" dc:"Email address"`
-//			Status   int    `json:"status" dc:"Account status"`
-//			Lang     string `json:"lang" dc:"Preferred language"`
-//		} `json:"account" dc:"Account information"`
-//		Roles       []string `json:"roles" dc:"User roles"`
-//		Permissions []string `json:"permissions" dc:"User permissions"`
-//	} `json:"data"`
-//}
+// CurrentUserReq defines the request for getting current user info
+type CurrentUserReq struct {
+	g.Meta        `path:"/current-user" method:"get" tags:"Authentication" summary:"Get current user info" sm:"Get current user info" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+}
+
+// CurrentUserRes defines the response for getting current user info
+type CurrentUserRes struct {
+	api_v1.StandardRes
+	Data struct {
+		Account struct {
+			Id       int64  `json:"id" dc:"Account ID"`
+			Username string `json:"username" dc:"Username"`
+			Email    string `json:"email" dc:"Email address"`
+			Status   int    `json:"status" dc:"Account status"`
+			Lang     string `json:"lang" dc:"Preferred language"`
+		} `json:"account" dc:"Account information"`
+		Roles       []string `json:"roles" dc:"User roles"`
+		Permissions []string `json:"permissions" dc:"User permissions (format: module:action:resource)"`
+	} `json:"data"`
+}

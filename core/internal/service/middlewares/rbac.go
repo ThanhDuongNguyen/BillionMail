@@ -3,12 +3,10 @@ package middlewares
 import (
 	"billionmail-core/internal/service/public"
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 
 	"billionmail-core/internal/service/rbac"
@@ -16,35 +14,55 @@ import (
 
 // PathToRouteInfo converts path to module, action, and resource
 func PathToRouteInfo(path string) (module, action, resource string) {
-	// Extract module
-	modules := []string{"account", "role", "permission"}
-	for _, m := range modules {
-		if strings.Contains(path, "/"+m+"/") || strings.HasSuffix(path, "/"+m) {
-			module = m
-			break
+	// Map of path patterns to permission components
+	// Format: path prefix -> module, default resource
+	pathMappings := map[string]struct {
+		module   string
+		resource string
+	}{
+		"/api/campaign":        {"campaign", "campaign"},
+		"/api/contact/group":   {"contact", "group"},
+		"/api/contact":         {"contact", "subscriber"},
+		"/api/subscribe_list":  {"contact", "group"},
+		"/api/domains":         {"domain", "domain"},
+		"/api/mail_boxes":      {"mailbox", "mailbox"},
+		"/api/email_template":  {"template", "template"},
+		"/api/settings":        {"settings", "settings"},
+		"/api/overview":        {"overview", "overview"},
+		"/api/operation_log":   {"logs", "logs"},
+		"/api/relay":           {"smtp", "smtp"},
+		"/api/batch_mail":      {"campaign", "campaign"},
+		"/api/tags":            {"contact", "subscriber"},
+	}
+
+	// Check longest prefix first (more specific paths first)
+	bestMatch := ""
+	for prefix := range pathMappings {
+		if strings.HasPrefix(path, prefix) && len(prefix) > len(bestMatch) {
+			bestMatch = prefix
 		}
 	}
 
-	// Extract action and resource
-	pattern := `/api/(\w+)/(\w+)(?:/.*)?`
-	match, err := gregex.MatchString(pattern, path)
-	if err == nil && len(match) >= 3 {
-		resource = match[1]
-		actionName := match[2]
+	if bestMatch == "" {
+		return "", "", ""
+	}
 
-		// Map HTTP method to CRUD action if action is a standard CRUD
-		switch actionName {
-		case "list", "detail":
-			action = "read"
-		case "create":
-			action = "create"
-		case "update":
-			action = "update"
-		case "delete":
-			action = "delete"
-		default:
-			action = actionName
-		}
+	module = pathMappings[bestMatch].module
+	resource = pathMappings[bestMatch].resource
+
+	// Determine action from path suffix or HTTP method context
+	lowerPath := strings.ToLower(path)
+	switch {
+	case strings.Contains(lowerPath, "/create") || strings.Contains(lowerPath, "/add"):
+		action = "create"
+	case strings.Contains(lowerPath, "/update") || strings.Contains(lowerPath, "/edit") || strings.Contains(lowerPath, "/set_"):
+		action = "update"
+	case strings.Contains(lowerPath, "/delete") || strings.Contains(lowerPath, "/remove"):
+		action = "delete"
+	case strings.Contains(lowerPath, "/export"):
+		action = "export"
+	default:
+		action = "read"
 	}
 
 	return
@@ -65,10 +83,39 @@ func NewRBACMiddleware() *RBACMiddleware {
 // PermissionCheck checks if the current user has the required permission
 func (m *RBACMiddleware) PermissionCheck(r *ghttp.Request) {
 	// Skip permission check for authentication-related routes
-	if r.URL.Path == "/api/v1/login" ||
-		r.URL.Path == "/api/v1/refresh-token" {
+	if r.URL.Path == "/api/login" ||
+		r.URL.Path == "/api/refresh-token" ||
+		r.URL.Path == "/api/get_validate_code" ||
+		r.URL.Path == "/api/current-user" ||
+		r.URL.Path == "/api/languages/set" ||
+		r.URL.Path == "/api/languages/get" {
 		r.Middleware.Next()
 		return
+	}
+
+	// Skip RBAC management routes (they have their own admin check in controllers)
+	if strings.HasPrefix(r.URL.Path, "/api/account/") ||
+		strings.HasPrefix(r.URL.Path, "/api/role/") ||
+		strings.HasPrefix(r.URL.Path, "/api/permission/") {
+		r.Middleware.Next()
+		return
+	}
+
+	// Skip common/shared APIs that all authenticated users need access to
+	commonPaths := []string{
+		"/api/settings/get_version",
+		"/api/settings/get_language",
+		"/api/domains/all",
+		"/api/overview/info",
+		"/api/files/",
+		"/api/askai/",
+		"/api/tags/",
+	}
+	for _, path := range commonPaths {
+		if r.URL.Path == path || strings.HasPrefix(r.URL.Path, path) {
+			r.Middleware.Next()
+			return
+		}
 	}
 
 	// Extract account ID from context
@@ -94,10 +141,9 @@ func (m *RBACMiddleware) PermissionCheck(r *ghttp.Request) {
 	// Extract module, action, and resource from request path
 	module, action, resource := PathToRouteInfo(r.URL.Path)
 
-	// If we couldn't determine the module, action, or resource, log it and allow the request
+	// If we couldn't determine the module, action, or resource, allow the request
+	// (unknown routes are not protected by RBAC, they rely on JWT auth only)
 	if module == "" || action == "" || resource == "" {
-		g.Log().Warning(context.Background(),
-			fmt.Sprintf("Could not determine permission components for path: %s, allowing access", r.URL.Path))
 		r.Middleware.Next()
 		return
 	}
@@ -107,8 +153,9 @@ func (m *RBACMiddleware) PermissionCheck(r *ghttp.Request) {
 	if err != nil {
 		g.Log().Error(r.GetCtx(), "Permission check error:", err)
 		r.Response.WriteJson(g.Map{
-			"code": 500,
-			"msg":  "Error checking permissions",
+			"code":    500,
+			"msg":     "Error checking permissions",
+			"success": false,
 		})
 		r.Exit()
 		return
@@ -116,8 +163,9 @@ func (m *RBACMiddleware) PermissionCheck(r *ghttp.Request) {
 
 	if !hasPermission {
 		r.Response.WriteJson(g.Map{
-			"code": 403,
-			"msg":  "Insufficient permissions",
+			"code":    403,
+			"msg":     "Insufficient permissions",
+			"success": false,
 		})
 		r.Exit()
 		return

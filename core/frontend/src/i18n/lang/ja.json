@@ -86,7 +86,10 @@
 			"service": "Service",
 			"logs": "Logs",
 			"operation_logs": "Operation Logs",
-			"error_logs": "Error Logs"
+			"error_logs": "Error Logs",
+			"users": "ユーザー",
+			"accounts": "アカウント",
+			"roles": "ロール"
 		}
 	},
 	"login": {
@@ -750,7 +753,6 @@
 			}
 		}
 	},
-
 	"domain": {
 		"title": "MailDomain",
 		"addDomain": "ドメインを追加",

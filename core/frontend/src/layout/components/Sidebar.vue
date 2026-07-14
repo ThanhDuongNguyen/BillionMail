@@ -48,7 +48,7 @@ import { VNodeChild } from 'vue'
 import { MenuOption } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
-import { useMenuStore, useGlobalStore, useUserStore } from '@/store'
+import { useMenuStore, useGlobalStore, useUserStore, usePermissionStore } from '@/store'
 import { menuList } from '@/router/router'
 
 const { t } = useI18n()
@@ -58,6 +58,7 @@ const route = useRoute()
 const menuStore = useMenuStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+const permissionStore = usePermissionStore()
 
 const { isCollapse } = storeToRefs(globalStore)
 
@@ -68,7 +69,30 @@ const activeMenuKey = computed(() => {
 
 // 路由菜单
 const routerMenus = computed(() => {
-	return menuStore.menuList.filter(route => route.meta && !route.meta.hidden)
+	return menuStore.menuList.filter(route => {
+		if (!route.meta) return false
+		if (route.meta.hidden) return false
+		// Hide adminOnly routes for non-admin users
+		if (route.meta.adminOnly && !permissionStore.isAdmin) return false
+		// Hide routes the user has no module access to
+		if (!permissionStore.isAdmin) {
+			const routeModuleMap: Record<string, string> = {
+				contacts: 'contact',
+				domain: 'domain',
+				mailbox: 'mailbox',
+				market: 'campaign',
+				template: 'template',
+				settings: 'settings',
+				overview: 'overview',
+				logs: 'logs',
+				smtp: 'smtp',
+			}
+			const key = String(route.meta.key || '')
+			const module = routeModuleMap[key]
+			if (module && !permissionStore.hasModuleAccess(module)) return false
+		}
+		return true
+	})
 })
 
 // 导航菜单选项
@@ -113,6 +137,7 @@ const iconMap: Record<string, VNodeChild> = {
 	settings: <i class="i-mdi-settings-outline"></i>,
 	template: <i class="i-mdi-settings-outline"></i>,
 	logs: <i class="i-icon-park-outline:log"></i>,
+	users: <i class="i-mdi-account-group-outline"></i>,
 	logout: <i class="i-mdi-logout"></i>,
 }
 

@@ -234,20 +234,27 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 
 	// Retrieve roles from cache or database
 	cacheKey := fmt.Sprintf("ACCOUNT_ROLES_%d", claims.AccountId)
-	roles := public.GetCache(cacheKey)
+	cachedRoleNames := public.GetCache(cacheKey)
 
-	if roles == nil {
-		roles, err = Account().GetAccountRoles(r.GetCtx(), claims.AccountId)
-		if err != nil {
+	if cachedRoleNames == nil {
+		roles, rolesErr := Account().GetAccountRoles(r.GetCtx(), claims.AccountId)
+		if rolesErr != nil {
 			resp.Msg = "failed to get account roles"
 			r.Response.WriteJson(resp)
 			r.Exit()
 			return
 		}
 
-		public.SetCache(cacheKey, roles, 20)
+		// Convert to role name strings
+		roleNames := make([]string, 0, len(roles))
+		for _, role := range roles {
+			roleNames = append(roleNames, role.RoleName)
+		}
+
+		public.SetCache(cacheKey, roleNames, 20)
+		r.SetCtxVar("roles", roleNames)
 	} else {
-		r.SetCtxVar("roles", roles)
+		r.SetCtxVar("roles", cachedRoleNames)
 	}
 
 	// Update Session

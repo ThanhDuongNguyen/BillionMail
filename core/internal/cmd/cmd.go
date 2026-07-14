@@ -236,7 +236,7 @@ var (
 				group.Middleware(rbac2.JWT().JWTAuthMiddleware)
 
 				// Add RBAC middleware
-				// group.Middleware(middlewares.NewRBACMiddleware().PermissionCheck)
+				group.Middleware(middlewares.NewRBACMiddleware().PermissionCheck)
 
 				// group.Middleware(ghttp.MiddlewareHandlerResponse)
 

@@ -3,6 +3,7 @@ import { confirm } from '@/utils'
 import { logout as logoutApi } from '@/api/modules/user'
 import i18n from '@/i18n'
 import router from '@/router'
+import usePermissionStore from './permission'
 
 export default defineStore(
 	'UserStore',
@@ -39,6 +40,9 @@ export default defineStore(
 			login.value.refresh_token = ''
 			login.value.ttl = 0
 			login.value.expire = 0
+			// Also reset permission store
+			const permissionStore = usePermissionStore()
+			permissionStore.reset()
 		}
 
 		const logout = () => {

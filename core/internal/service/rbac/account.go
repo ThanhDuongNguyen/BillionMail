@@ -167,7 +167,7 @@ func (s *accountService) AssignRole(ctx context.Context, accountId int64, roleId
 	_, err := g.DB().Model("account_role").Data(g.Map{
 		"account_id":  accountId,
 		"role_id":     roleId,
-		"create_time": time.Now(),
+		"create_time": time.Now().Unix(),
 	}).Insert()
 	return err
 }
@@ -198,7 +198,7 @@ func (s *accountService) BindRoles(ctx context.Context, accountId int64, roleIds
 		_, err = g.DB().Model("account_role").Data(g.Map{
 			"account_id":  accountId,
 			"role_id":     roleId,
-			"create_time": time.Now(),
+			"create_time": time.Now().Unix(),
 		}).Insert()
 		if err != nil {
 			return err
@@ -211,9 +211,10 @@ func (s *accountService) BindRoles(ctx context.Context, accountId int64, roleIds
 // GetRoles gets roles assigned to an account
 func (s *accountService) GetRoles(ctx context.Context, accountId int64) ([]model.Role, error) {
 	var roles []model.Role
-	err := g.DB().Model("role").
-		LeftJoin("account_role", "role.id=account_role.role_id").
-		Where("account_role.account_id = ?", accountId).
+	err := g.DB().Model("role r").
+		LeftJoin("account_role ar", "r.role_id=ar.role_id").
+		Where("ar.account_id = ?", accountId).
+		Fields("r.*").
 		Scan(&roles)
 	return roles, err
 }
@@ -221,10 +222,11 @@ func (s *accountService) GetRoles(ctx context.Context, accountId int64) ([]model
 // GetPermissions gets permissions assigned to an account
 func (s *accountService) GetPermissions(ctx context.Context, accountId int64) ([]model.Permission, error) {
 	var permissions []model.Permission
-	err := g.DB().Model("permission").
-		LeftJoin("role_permission", "permission.id=role_permission.permission_id").
-		LeftJoin("account_role", "role_permission.role_id=account_role.role_id").
-		Where("account_role.account_id = ?", accountId).
+	err := g.DB().Model("permission p").
+		LeftJoin("role_permission rp", "p.permission_id=rp.permission_id").
+		LeftJoin("account_role ar", "rp.role_id=ar.role_id").
+		Where("ar.account_id = ?", accountId).
+		Fields("p.*").
 		Scan(&permissions)
 	return permissions, err
 }
@@ -277,9 +279,9 @@ func (s *accountService) IsAdmin(ctx context.Context, accountId int64) (bool, er
 
 // CountAdmins counts admin accounts
 func (s *accountService) CountAdmins(ctx context.Context) (int, error) {
-	count, err := g.DB().Model("account_role").
-		LeftJoin("role", "account_role.role_id=role.id").
-		Where("role.name = ?", "admin").
+	count, err := g.DB().Model("account_role ar").
+		LeftJoin("role r", "ar.role_id=r.role_id").
+		Where("r.role_name = ?", "admin").
 		Count()
 	return count, err
 }

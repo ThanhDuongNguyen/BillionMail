@@ -130,6 +130,14 @@ interface LoginResponse {
 	token: string
 	refresh_token: string
 	ttl: number
+	accountInfo?: {
+		id: number
+		username: string
+		email: string
+		status: number
+		lang: string
+		roles: string[]
+	}
 }
 
 const handleLogin = async () => {
@@ -143,6 +151,15 @@ const handleLogin = async () => {
 				refresh_token: res.refresh_token,
 				ttl: res.ttl,
 			})
+			// Reset and set roles from login response
+			const { usePermissionStore } = await import('@/store')
+			const permissionStore = usePermissionStore()
+			permissionStore.reset()
+			if (res.accountInfo?.roles) {
+				permissionStore.setRoles(res.accountInfo.roles)
+			}
+			// Load full permissions from server
+			await permissionStore.loadPermissions()
 			setTimeout(() => {
 				router.push('/')
 			}, 1000)

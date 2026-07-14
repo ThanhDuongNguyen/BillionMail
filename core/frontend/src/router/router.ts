@@ -14,6 +14,7 @@ const routesReflectList = [
 	'Logs',
 	'Settings',
 	'Automation',
+	'Users',
 ]
 
 // Import routes from modules
