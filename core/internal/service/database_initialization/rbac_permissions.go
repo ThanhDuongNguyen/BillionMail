@@ -22,6 +22,8 @@ var defaultPermissions = []defaultPermission{
 	{"campaign:create:campaign", "Create campaigns", "campaign", "create", "campaign"},
 	{"campaign:update:campaign", "Update campaigns", "campaign", "update", "campaign"},
 	{"campaign:delete:campaign", "Delete campaigns", "campaign", "delete", "campaign"},
+	{"campaign:read:tracking", "View campaign tracking details", "campaign", "read", "tracking"},
+	{"campaign:export:tracking", "Export campaign tracking data", "campaign", "export", "tracking"},
 
 	// Contact module - group level (can select groups)
 	{"contact:read:group", "View contact groups", "contact", "read", "group"},

@@ -1013,6 +1013,14 @@
 			"pausing": "タスクを一時停止中... お待ちください",
 			"resuming": "タスクを再開中... お待ちください",
 			"sendingTest": "テストメールを送信中... お待ちください"
+		},
+		"recipients": {
+			"searchPlaceholder": "メールアドレスで検索",
+			"export": "CSV エクスポート",
+			"email": "メールアドレス",
+			"time": "時間",
+			"mailProvider": "メールプロバイダー",
+			"noPermission": "トラッキング詳細を表示する権限がありません"
 		}
 	},
 	"mailbox": {

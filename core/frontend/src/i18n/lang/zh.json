@@ -361,6 +361,14 @@
 				"pausing": "正在暂停任务，请稍候...",
 				"resuming": "正在恢复任务，请稍候...",
 				"sendingTest": "正在发送测试邮件，请稍候..."
+			},
+			"recipients": {
+				"searchPlaceholder": "搜索邮箱地址",
+				"export": "导出 CSV",
+				"email": "邮箱",
+				"time": "时间",
+				"mailProvider": "邮件服务商",
+				"noPermission": "无权限查看跟踪详情"
 			}
 		},
 		"template": {

@@ -132,3 +132,30 @@ export function getMailProviderLogs(params: {
 }) {
 	return instance.get('/batch_mail/tracking/logs', { params })
 }
+
+/**
+ * Get task recipients by status type (delivered, opened, clicked, bounced)
+ */
+export function getTaskRecipientsByStatus(params: {
+	task_id: number
+	type: 'delivered' | 'opened' | 'clicked' | 'bounced'
+	page: number
+	page_size: number
+	search?: string
+}) {
+	return instance.get('/batch_mail/tracking/recipients', { params })
+}
+
+/**
+ * Export task recipients to CSV
+ */
+export function exportTaskRecipients(params: {
+	task_id: number
+	type: 'delivered' | 'opened' | 'clicked' | 'bounced'
+	search?: string
+}) {
+	return instance.get('/batch_mail/tracking/recipients/export', {
+		params,
+		responseType: 'blob',
+	})
+}

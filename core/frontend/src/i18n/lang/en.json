@@ -359,6 +359,14 @@
 				"pausing": "Pausing task, please wait...",
 				"resuming": "Resuming task, please wait...",
 				"sendingTest": "Sending test email, please wait..."
+			},
+			"recipients": {
+				"searchPlaceholder": "Search by email",
+				"export": "Export CSV",
+				"email": "Email",
+				"time": "Time",
+				"mailProvider": "Mail Provider",
+				"noPermission": "No permission to view tracking details"
 			}
 		},
 		"template": {

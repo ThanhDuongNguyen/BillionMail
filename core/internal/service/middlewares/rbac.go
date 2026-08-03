@@ -31,6 +31,7 @@ func PathToRouteInfo(path string) (module, action, resource string) {
 		"/api/overview":        {"overview", "overview"},
 		"/api/operation_log":   {"logs", "logs"},
 		"/api/relay":           {"smtp", "smtp"},
+		"/api/batch_mail/tracking": {"campaign", "tracking"},
 		"/api/batch_mail":      {"campaign", "campaign"},
 		"/api/tags":            {"contact", "subscriber"},
 	}

@@ -23,7 +23,9 @@
 				:key="key"
 				:title="item.label"
 				:value="item.value"
-				:unit="item.unit">
+				:unit="item.unit"
+				:clickable="canViewTracking"
+				@click="handleMetricClick(key)">
 			</metric-card>
 		</div>
 
@@ -44,6 +46,9 @@
 		<div class="rate-charts-card">
 			<rate-chart-panel :bounce="bounceRate" :click="clickRate" :open="openRate" />
 		</div>
+
+		<!-- Recipient Drawer -->
+		<recipient-drawer ref="recipientDrawerRef" :task-id="id" />
 	</div>
 </template>
 
@@ -56,10 +61,36 @@ import MetricCard from '@/views/overview/components/MetricCard.vue'
 import ProviderTable from '@/views/overview/components/ProviderTable.vue'
 import SendTodayStats from '@/views/overview/components/SendTodayStats.vue'
 import RateChartPanel from '@/views/overview/components/RateChartPanel.vue'
+import RecipientDrawer from './components/RecipientDrawer.vue'
+import usePermissionStore from '@/store/modules/permission'
 
 const route = useRoute()
 
 const { t } = useI18n()
+
+const permissionStore = usePermissionStore()
+
+const canViewTracking = computed(() => {
+	return permissionStore.hasPermission('campaign:read:tracking')
+})
+
+const recipientDrawerRef = ref<InstanceType<typeof RecipientDrawer> | null>(null)
+
+// Map metric keys to status types
+const metricToStatusType: Record<string, 'delivered' | 'opened' | 'clicked' | 'bounced'> = {
+	delivery_rate: 'delivered',
+	open_rate: 'opened',
+	click_rate: 'clicked',
+	bounce_rate: 'bounced',
+}
+
+function handleMetricClick(key: string) {
+	if (!canViewTracking.value) return
+	const type = metricToStatusType[key]
+	if (type && recipientDrawerRef.value) {
+		recipientDrawerRef.value.open(type)
+	}
+}
 
 const id = computed(() => {
 	return getNumber(route.params.id || '0')

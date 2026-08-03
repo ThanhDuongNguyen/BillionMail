@@ -265,6 +265,46 @@ type TaskStatChartRes struct {
 	} `json:"data"`
 }
 
+// GetTaskRecipientsByStatusReq Request for task recipients filtered by status type
+type GetTaskRecipientsByStatusReq struct {
+	g.Meta        `path:"/batch_mail/tracking/recipients" method:"get" tags:"EmailTracking" summary:"Get task recipients by status type"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	TaskId        int    `json:"task_id" v:"required" dc:"Task ID"`
+	Type          string `json:"type" v:"required|in:delivered,opened,clicked,bounced" dc:"Status type filter"`
+	Search        string `json:"search" dc:"Search by email"`
+	Page          int    `json:"page" dc:"Page number"`
+	PageSize      int    `json:"page_size" dc:"Items per page"`
+}
+
+// RecipientItem represents a recipient entry with tracking info
+type RecipientItem struct {
+	Recipient    string `json:"recipient" dc:"Recipient email"`
+	Time         int64  `json:"time" dc:"Event time (unix timestamp)"`
+	Url          string `json:"url,omitempty" dc:"Clicked URL (only for clicked type)"`
+	MailProvider string `json:"mail_provider,omitempty" dc:"Mail provider domain"`
+}
+
+type GetTaskRecipientsByStatusRes struct {
+	api_v1.StandardRes
+	Data struct {
+		Total int              `json:"total" dc:"Total records"`
+		List  []*RecipientItem `json:"list" dc:"Recipient list"`
+	} `json:"data" dc:"Data"`
+}
+
+// ExportTaskRecipientsReq Request to export task recipients as Excel
+type ExportTaskRecipientsReq struct {
+	g.Meta        `path:"/batch_mail/tracking/recipients/export" method:"get" tags:"EmailTracking" summary:"Export task recipients by status type"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	TaskId        int    `json:"task_id" v:"required" dc:"Task ID"`
+	Type          string `json:"type" v:"required|in:delivered,opened,clicked,bounced" dc:"Status type filter"`
+	Search        string `json:"search" dc:"Search by email"`
+}
+
+type ExportTaskRecipientsRes struct {
+	api_v1.StandardRes
+}
+
 type UpdateTaskInfoReq struct {
 	g.Meta        `path:"/batch_mail/task/update" method:"post" tags:"BatchMail" summary:"update task info"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
