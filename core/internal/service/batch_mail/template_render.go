@@ -132,6 +132,15 @@ func (e *TemplateEngine) RenderEmailTemplateWithAPI(ctx context.Context, content
 		taskData["UpdateTime"] = task.UpdateTime
 		taskData["Remark"] = task.Remark
 		taskData["Active"] = task.Active
+
+		// Merge task custom variables (cannot override built-in fields)
+		if task.Variables != nil {
+			for k, v := range task.Variables {
+				if _, exists := taskData[k]; !exists {
+					taskData[k] = v
+				}
+			}
+		}
 	}
 
 	// prepare template data

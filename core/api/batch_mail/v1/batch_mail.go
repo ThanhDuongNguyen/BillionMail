@@ -152,8 +152,9 @@ type CreateTaskReq struct {
 	Warmup        int    `json:"warmup" v:"in:0,1" dc:"warmup" default:"0"`
 	Remark        string `json:"remark" dc:"remark"`
 
-	TagIds   []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
-	TagLogic string `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)" default:"AND"`
+	TagIds    []int             `json:"tag_ids" dc:"tag ids for filtering contacts"`
+	TagLogic  string            `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)" default:"AND"`
+	Variables map[string]string `json:"variables" dc:"task custom variables"`
 }
 
 type CreateTaskRes struct {
@@ -320,6 +321,7 @@ type UpdateTaskInfoReq struct {
 	StartTime     int    `json:"start_time" dc:"start time"`
 	TagIds        []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
 	TagLogic      string `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)"`
+	Variables     map[string]string `json:"variables" dc:"task custom variables"`
 }
 type UpdateTaskInfoRes struct {
 	api_v1.StandardRes

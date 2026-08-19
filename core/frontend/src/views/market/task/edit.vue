@@ -136,6 +136,9 @@
 									:placeholder="$t('market.task.edit.remarkPlaceholder')">
 								</n-input>
 							</n-form-item>
+							<n-form-item :label="$t('market.task.edit.variables.label')">
+								<task-variables v-model:value="form.variables"></task-variables>
+							</n-form-item>
 							<n-form-item :label="$t('market.task.edit.testEmail')" :show-feedback="false">
 								<div class="flex-1 mr-10px">
 									<n-input
@@ -203,6 +206,7 @@ import FromSelect from './components/FromSelect.vue'
 import GroupSelect from './components/GroupSelect.vue'
 import TagSelect from './components/TagSelect.vue'
 import TemplateSelect from './components/TemplateSelect.vue'
+import TaskVariables from './components/TaskVariables.vue'
 import { getContactTagCount } from '@/api/modules/contacts/group'
 
 const { t } = useI18n()
@@ -237,6 +241,7 @@ const form = reactive({
 	remark: '',
 	tag_ids: [] as number[],
 	tag_logic: 'OR',
+	variables: {} as Record<string, string>,
 })
 
 const logicOptions = [
@@ -410,6 +415,7 @@ const getParams = () => {
 		remark: form.remark,
 		tag_ids: form.tag_ids,
 		tag_logic: form.tag_logic,
+		variables: form.variables,
 	}
 }
 
@@ -465,6 +471,7 @@ const initForm = async () => {
 		threadsType.value = res.threads === 0 ? 0 : 1
 		form.remark = res.remark
 		form.tag_logic = res.tag_logic
+		form.variables = res.variables || {}
 		nextTick(() => {
 			form.tag_ids = res.tag_ids
 		})

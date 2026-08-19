@@ -72,24 +72,25 @@ type EmailTask struct {
 	Unsubscribe    int    `json:"unsubscribe"     dc:"Allow Unsubscribe"`
 	Threads        int    `json:"threads"         dc:"Thread Count"`
 	//Etypes          string `json:"etypes"          dc:"Contact Group IDs"`
-	TrackOpen       int    `json:"track_open"      dc:"Track Opens"`
-	TrackClick      int    `json:"track_click"     dc:"Track Clicks"`
-	StartTime       int    `json:"start_time"      dc:"Start Time"`
-	CreateTime      int    `json:"create_time"     dc:"Create Time"`
-	UpdateTime      int    `json:"update_time"     dc:"Update Time"`
-	Remark          string `json:"remark"          dc:"Remark"`
-	Active          int    `json:"active"          dc:"Status"`
-	AddType         int    `json:"addType"          description:""`
-	SendsCount      int    `json:"sendsCount"       description:""`
-	DeliveredCount  int    `json:"deliveredCount"   description:""`
-	BouncedCount    int    `json:"bouncedCount"     description:""`
-	DeferredCount   int    `json:"deferredCount"    description:""`
-	StatsUpdateTime int    `json:"statsUpdateTime"  description:""`
-	GroupId         int    `json:"group_id"        dc:"Group ID"`
-	TagIdsRaw       string `json:"-"               dc:"Tag IDs (JSON string - internal use)" orm:"tag_ids"`
-	TagIds          []int  `json:"tag_ids"         dc:"Tag IDs (parsed array)"`
-	TagLogic        string `json:"tag_logic"       dc:"Tag Logic (AND/OR)"`
-	UseTagFilter    int    `json:"use_tag_filter"  dc:"Use Tag Filter (0: no, 1: yes)"`
+	TrackOpen       int               `json:"track_open"      dc:"Track Opens"`
+	TrackClick      int               `json:"track_click"     dc:"Track Clicks"`
+	StartTime       int               `json:"start_time"      dc:"Start Time"`
+	CreateTime      int               `json:"create_time"     dc:"Create Time"`
+	UpdateTime      int               `json:"update_time"     dc:"Update Time"`
+	Remark          string            `json:"remark"          dc:"Remark"`
+	Active          int               `json:"active"          dc:"Status"`
+	AddType         int               `json:"addType"          description:""`
+	SendsCount      int               `json:"sendsCount"       description:""`
+	DeliveredCount  int               `json:"deliveredCount"   description:""`
+	BouncedCount    int               `json:"bouncedCount"     description:""`
+	DeferredCount   int               `json:"deferredCount"    description:""`
+	StatsUpdateTime int               `json:"statsUpdateTime"  description:""`
+	GroupId         int               `json:"group_id"        dc:"Group ID"`
+	TagIdsRaw       string            `json:"-"               dc:"Tag IDs (JSON string - internal use)" orm:"tag_ids"`
+	TagIds          []int             `json:"tag_ids"         dc:"Tag IDs (parsed array)"`
+	TagLogic        string            `json:"tag_logic"       dc:"Tag Logic (AND/OR)"`
+	UseTagFilter    int               `json:"use_tag_filter"  dc:"Use Tag Filter (0: no, 1: yes)"`
+	Variables       map[string]string `json:"variables"       dc:"Task Custom Variables" orm:"variables"`
 }
 
 // MarshalJSON implements custom JSON marshaling to convert TagIdsRaw to TagIds array

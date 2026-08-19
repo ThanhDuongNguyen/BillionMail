@@ -32,6 +32,7 @@ export interface Task {
 	tag_ids: number[]
 	tag_logic: string
 	tags: Array<{ id: number; name: string }>
+	variables: Record<string, string>
 }
 
 export interface Group {

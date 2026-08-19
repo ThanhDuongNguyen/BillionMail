@@ -429,6 +429,7 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			"group_id":        req.GroupId,
 			"tag_ids":         tagIdsJson,
 			"tag_logic":       req.TagLogic,
+			"variables":       req.Variables,
 		})
 		if e != nil {
 			return gerror.New(public.LangCtx(ctx, "Failed to create task {}", e.Error()))

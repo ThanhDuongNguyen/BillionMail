@@ -41,6 +41,7 @@ interface TaskAddParams {
 	remark: string
 	tag_ids: number[]
 	tag_logic: string
+	variables?: Record<string, string>
 }
 
 /**

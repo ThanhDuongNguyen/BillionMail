@@ -5,6 +5,8 @@ import (
 	"billionmail-core/internal/service/batch_mail"
 	"billionmail-core/internal/service/public"
 	"context"
+	"regexp"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 
 	"billionmail-core/api/batch_mail/v1"
@@ -66,5 +68,42 @@ func validateCreateTaskRequest(req *v1.CreateTaskReq) error {
 		}
 	}
 
+	if err := validateTaskVariables(req.Variables); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// variableKeyRegex allows only alphanumeric characters and underscores for variable keys.
+var variableKeyRegex = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// reservedTaskKeys are built-in task fields that cannot be overridden by custom variables.
+var reservedTaskKeys = map[string]struct{}{
+	"Id": {}, "TaskName": {}, "Addresser": {}, "Subject": {},
+	"FullName": {}, "RecipientCount": {}, "TaskProcess": {}, "Pause": {},
+	"TemplateId": {}, "IsRecord": {}, "Unsubscribe": {}, "Threads": {},
+	"TrackOpen": {}, "TrackClick": {}, "StartTime": {}, "CreateTime": {},
+	"UpdateTime": {}, "Remark": {}, "Active": {},
+}
+
+const maxTaskVariables = 20
+
+// validateTaskVariables validates custom task variables.
+func validateTaskVariables(variables map[string]string) error {
+	if len(variables) == 0 {
+		return nil
+	}
+	if len(variables) > maxTaskVariables {
+		return gerror.Newf("Task variables cannot exceed %d entries", maxTaskVariables)
+	}
+	for key := range variables {
+		if !variableKeyRegex.MatchString(key) {
+			return gerror.Newf("Variable key %q is invalid: only letters, digits, and underscores are allowed, and must start with a letter or underscore", key)
+		}
+		if _, reserved := reservedTaskKeys[key]; reserved {
+			return gerror.Newf("Variable key %q conflicts with a built-in task field", key)
+		}
+	}
 	return nil
 }

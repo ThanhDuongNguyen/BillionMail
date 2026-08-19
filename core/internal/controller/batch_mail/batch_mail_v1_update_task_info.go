@@ -79,6 +79,13 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 	if req.TagLogic == "AND" || req.TagLogic == "OR" {
 		updateData["tag_logic"] = req.TagLogic
 	}
+	if req.Variables != nil {
+		if err = validateTaskVariables(req.Variables); err != nil {
+			res.SetError(err)
+			return
+		}
+		updateData["variables"] = req.Variables
+	}
 	if len(updateData) == 0 {
 		res.SetError(gerror.New(public.LangCtx(ctx, "No valid update fields")))
 		return

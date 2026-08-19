@@ -329,6 +329,13 @@
 				"viewCase": "查看案例",
 				"tags": "标签",
 				"tagLogic": "标签关系",
+				"variables": {
+					"label": "自定义变量",
+					"keyPlaceholder": "变量名",
+					"valuePlaceholder": "变量值",
+					"add": "添加变量",
+					"tip": "在模板中使用: {{ .Task.变量名 }}"
+				},
 				"preview": {
 					"empty": "请选择邮件模板查看预览"
 				},
