@@ -80,6 +80,11 @@ getNewTableData()
 // Table columns
 const columns = ref<DataTableColumns<Template>>([
 	{
+		key: 'id',
+		title: 'ID',
+		width: 60,
+	},
+	{
 		key: 'temp_name',
 		title: t('market.template.columns.name'),
 		minWidth: 120,

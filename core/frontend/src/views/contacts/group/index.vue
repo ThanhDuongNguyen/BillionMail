@@ -64,6 +64,11 @@ const columns = ref<DataTableColumns<Group>>([
 		type: 'selection',
 	},
 	{
+		key: 'id',
+		title: 'ID',
+		width: 60,
+	},
+	{
 		key: 'name',
 		title: t('contacts.group.columns.name'),
 		minWidth: 120,
