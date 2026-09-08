@@ -137,7 +137,45 @@
 								</n-input>
 							</n-form-item>
 							<n-form-item :label="$t('market.task.edit.variables.label')">
-								<task-variables v-model:value="form.variables"></task-variables>
+								<div class="task-variables-inline">
+									<div
+										v-for="(item, index) in variableList"
+										:key="index"
+										class="variable-row">
+										<n-input
+											v-model:value="item.key"
+											:placeholder="$t('market.task.edit.variables.keyPlaceholder')"
+											class="variable-key"
+											@update:value="syncVariables">
+										</n-input>
+										<n-input
+											v-model:value="item.value"
+											type="textarea"
+											:rows="3"
+											:placeholder="$t('market.task.edit.variables.valuePlaceholder')"
+											class="variable-value"
+											@update:value="syncVariables">
+										</n-input>
+										<n-button text type="error" @click="handleRemoveVariable(index)">
+											<template #icon>
+												<div class="i-carbon-close"></div>
+											</template>
+										</n-button>
+									</div>
+									<n-button
+										v-if="variableList.length < 20"
+										text
+										type="primary"
+										@click="handleAddVariable">
+										<template #icon>
+											<div class="i-carbon-add"></div>
+										</template>
+										{{ $t('market.task.edit.variables.add') }}
+									</n-button>
+									<div class="variable-tip">
+										{{ $t('market.task.edit.variables.tip') }}
+									</div>
+								</div>
 							</n-form-item>
 							<n-form-item :label="$t('market.task.edit.testEmail')" :show-feedback="false">
 								<div class="flex-1 mr-10px">
@@ -197,6 +235,7 @@
 import { FormRules } from 'naive-ui'
 import { useGlobalStore } from '@/store'
 import { useElementBounding } from '@vueuse/core'
+
 import { confirm, isObject, Message } from '@/utils'
 import { addTask, getTaskDetails, sendTestEmail, updateTask } from '@/api/modules/market/task'
 import { Task } from './interface'
@@ -206,7 +245,6 @@ import FromSelect from './components/FromSelect.vue'
 import GroupSelect from './components/GroupSelect.vue'
 import TagSelect from './components/TagSelect.vue'
 import TemplateSelect from './components/TemplateSelect.vue'
-import TaskVariables from './components/TaskVariables.vue'
 import { getContactTagCount } from '@/api/modules/contacts/group'
 
 const { t } = useI18n()
@@ -243,6 +281,111 @@ const form = reactive({
 	tag_logic: 'OR',
 	variables: {} as Record<string, string>,
 })
+
+// 自定义变量列表 (inline, key/value pairs)
+interface VariableItem {
+	key: string
+	value: string
+}
+
+const variableList = ref<VariableItem[]>([])
+
+// 内置任务字段 (不作为自定义变量)
+const TASK_BUILTIN_FIELDS = new Set([
+	'Id',
+	'TaskName',
+	'Addresser',
+	'Subject',
+	'FullName',
+	'RecipientCount',
+	'TaskProcess',
+	'Pause',
+	'TemplateId',
+	'IsRecord',
+	'Unsubscribe',
+	'Threads',
+	'Etypes',
+	'TrackOpen',
+	'TrackClick',
+	'StartTime',
+	'CreateTime',
+	'UpdateTime',
+	'Remark',
+	'Active',
+])
+
+// 添加变量
+const handleAddVariable = () => {
+	if (variableList.value.length >= 20) return
+	variableList.value.push({ key: '', value: '' })
+}
+
+// 删除变量
+const handleRemoveVariable = (index: number) => {
+	variableList.value.splice(index, 1)
+	syncVariables()
+}
+
+// 同步到 form.variables
+const syncVariables = () => {
+	const result: Record<string, string> = {}
+	for (const item of variableList.value) {
+		const key = item.key.trim()
+		if (key) {
+			result[key] = item.value
+		}
+	}
+	form.variables = result
+}
+
+// 从 form.variables 初始化列表
+const initVariableList = () => {
+	const entries = Object.entries(form.variables || {})
+	variableList.value = entries.map(([key, value]) => ({ key, value }))
+}
+
+/**
+ * @description 从模板内容中提取 {{ .Task.xxx }} 形式的自定义变量名
+ * 排除内置任务字段
+ */
+const extractTemplateVariables = (content: string): string[] => {
+	if (!content) return []
+	// 匹配 {{ .Task.<name> }} (name 允许字母、数字、下划线)
+	const regex = /\{\{\s*\.\s*Task\s*\.\s*([A-Za-z_]\w*)\s*\}\}/g
+	const names: string[] = []
+	let match: RegExpExecArray | null
+	while ((match = regex.exec(content)) !== null) {
+		const name = match[1]
+		if (!TASK_BUILTIN_FIELDS.has(name) && !names.includes(name)) {
+			names.push(name)
+		}
+	}
+	return names
+}
+
+/**
+ * @description 根据模板检测到的变量同步变量列表：
+ * - 新增模板中出现但列表中没有的变量 (value 留空)
+ * - 删除模板中不再出现的变量
+ * - 保留已存在变量的 value
+ */
+const syncVariablesFromTemplate = (content: string) => {
+	const detected = extractTemplateVariables(content)
+
+	// 保留已填写的 value
+	const existingValues: Record<string, string> = {}
+	for (const item of variableList.value) {
+		const key = item.key.trim()
+		if (key) existingValues[key] = item.value
+	}
+
+	variableList.value = detected.map(name => ({
+		key: name,
+		value: existingValues[name] ?? '',
+	}))
+
+	syncVariables()
+}
 
 const logicOptions = [
 	{
@@ -319,6 +462,11 @@ const testEmail = ref('')
 
 // 模板内容
 const templateContent = ref('')
+
+// 模板内容变化时，自动检测并同步自定义变量
+watch(templateContent, content => {
+	syncVariablesFromTemplate(content)
+})
 
 // 跳转模板页面
 const handleGoTemplate = () => {
@@ -472,6 +620,7 @@ const initForm = async () => {
 		form.remark = res.remark
 		form.tag_logic = res.tag_logic
 		form.variables = res.variables || {}
+		initVariableList()
 		nextTick(() => {
 			form.tag_ids = res.tag_ids
 		})
@@ -548,5 +697,34 @@ initForm()
 	padding: 23px 24px;
 	background-color: var(--color-bg-1);
 	border-top: 1px solid var(--color-border-1);
+}
+
+.task-variables-inline {
+	width: 100%;
+
+	.variable-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	.variable-key {
+		flex: 2;
+	}
+
+	.variable-value {
+		flex: 3;
+
+		:deep(textarea) {
+			resize: vertical;
+		}
+	}
+
+	.variable-tip {
+		margin-top: 4px;
+		font-size: 12px;
+		color: var(--text-color-3);
+	}
 }
 </style>

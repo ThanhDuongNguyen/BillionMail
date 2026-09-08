@@ -332,7 +332,7 @@
 					"keyPlaceholder": "Variable name",
 					"valuePlaceholder": "Variable value",
 					"add": "Add variable",
-					"tip": "Use in templates: {{ .Task.variable_name }}"
+					"tip": "Use in templates: {'{{'} .Task.variable_name {'}}'}"
 				},
 				"preview": {
 					"empty": "Please select an email template to preview"

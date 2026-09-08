@@ -334,7 +334,7 @@
 					"keyPlaceholder": "变量名",
 					"valuePlaceholder": "变量值",
 					"add": "添加变量",
-					"tip": "在模板中使用: {{ .Task.变量名 }}"
+					"tip": "在模板中使用: {'{{'} .Task.变量名 {'}}'}"
 				},
 				"preview": {
 					"empty": "请选择邮件模板查看预览"
