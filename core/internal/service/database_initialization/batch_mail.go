@@ -257,6 +257,7 @@ func init() {
 		_ = AddColumnIfNotExists("email_tasks", "tag_ids", "TEXT", "''", false)
 		_ = AddColumnIfNotExists("email_tasks", "tag_logic", "VARCHAR(10)", "'AND'", false)
 		_ = AddColumnIfNotExists("email_tasks", "variables", "JSONB", "'{}'::jsonb", false)
+		_ = AddColumnIfNotExists("email_tasks", "attachments", "JSONB", "'[]'::jsonb", false)
 
 		// unsubscribe_records
 		_ = DropForeignKeyIfExists("unsubscribe_records", "group_id")

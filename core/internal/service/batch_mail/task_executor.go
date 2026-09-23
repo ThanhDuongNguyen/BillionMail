@@ -1214,6 +1214,11 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 		message.SetRealName(currentTask.FullName)
 	}
 
+	// attach task attachments (if any)
+	if atts := LoadTaskAttachmentsForSend(ctx, currentTask); len(atts) > 0 {
+		message.SetAttachments(atts)
+	}
+
 	//g.Log().Infof(ctx, "sendEmail - final check before sending: sender=%s, display_name=%s, subject=%s, recipient=%s",
 	//	currentTask.Addresser, currentTask.FullName, renderedSubject, recipient.Recipient)
 

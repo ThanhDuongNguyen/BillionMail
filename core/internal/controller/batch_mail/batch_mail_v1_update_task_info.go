@@ -86,6 +86,18 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 		}
 		updateData["variables"] = req.Variables
 	}
+	if req.Attachments != nil {
+		if err = batch_mail.ValidateAttachmentInputs(ctx, req.Attachments); err != nil {
+			res.SetError(err)
+			return
+		}
+		attachments, e := batch_mail.SaveTaskAttachments(ctx, req.TaskId, req.Attachments)
+		if e != nil {
+			res.SetError(e)
+			return nil, e
+		}
+		updateData["attachments"] = batch_mail.MarshalAttachments(attachments)
+	}
 	if len(updateData) == 0 {
 		res.SetError(gerror.New(public.LangCtx(ctx, "No valid update fields")))
 		return
@@ -102,9 +114,10 @@ func (c *ControllerV1) UpdateTaskInfo(ctx context.Context, req *v1.UpdateTaskInf
 		return nil, err
 	}
 
+	logSubject, _ := updateData["subject"].(string)
 	_ = public.WriteLog(ctx, public.LogParams{
 		Type: consts.LOGTYPE.Task,
-		Log:  "Update Task Info :" + updateData["subject"].(string) + " successfully",
+		Log:  "Update Task Info :" + logSubject + " successfully",
 		Data: updateData,
 	})
 

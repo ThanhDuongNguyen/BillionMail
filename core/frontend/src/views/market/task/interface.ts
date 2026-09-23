@@ -33,6 +33,17 @@ export interface Task {
 	tag_logic: string
 	tags: Array<{ id: number; name: string }>
 	variables: Record<string, string>
+	attachments: TaskAttachment[]
+}
+
+export interface TaskAttachment {
+	filename: string
+	content_type: string
+	size: number
+	// base64 content, only present for newly added (not-yet-saved) files
+	content?: string
+	// server-side storage path, present for already-saved files
+	path?: string
 }
 
 export interface Group {

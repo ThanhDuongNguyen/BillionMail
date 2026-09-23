@@ -155,6 +155,19 @@ type CreateTaskReq struct {
 	TagIds    []int             `json:"tag_ids" dc:"tag ids for filtering contacts"`
 	TagLogic  string            `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)" default:"AND"`
 	Variables map[string]string `json:"variables" dc:"task custom variables"`
+
+	Attachments []TaskAttachment `json:"attachments" dc:"task attachments"`
+}
+
+// TaskAttachment is the attachment payload sent when creating/updating a task.
+// For new uploads, Content holds the base64-encoded file data (data URI prefix allowed).
+// For attachments kept during edit, Content is empty and Path references the stored file.
+type TaskAttachment struct {
+	Filename    string `json:"filename"     dc:"original file name"`
+	ContentType string `json:"content_type" dc:"MIME content type"`
+	Size        int64  `json:"size"         dc:"file size in bytes"`
+	Content     string `json:"content"      dc:"base64 encoded content (input only)"`
+	Path        string `json:"path"         dc:"stored path (edit mode, already-uploaded files)"`
 }
 
 type CreateTaskRes struct {
@@ -322,6 +335,7 @@ type UpdateTaskInfoReq struct {
 	TagIds        []int  `json:"tag_ids" dc:"tag ids for filtering contacts"`
 	TagLogic      string `json:"tag_logic" v:"in:AND,OR" dc:"tag logic (AND: must have all tags, OR: have any tag)"`
 	Variables     map[string]string `json:"variables" dc:"task custom variables"`
+	Attachments   []TaskAttachment  `json:"attachments" dc:"task attachments"`
 }
 type UpdateTaskInfoRes struct {
 	api_v1.StandardRes

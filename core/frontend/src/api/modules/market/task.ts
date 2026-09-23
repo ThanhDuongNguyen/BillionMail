@@ -1,6 +1,6 @@
 import { i18n } from '@/i18n'
 import { instance } from '@/api'
-import type { TaskParams } from '@/views/market/task/interface'
+import type { TaskParams, TaskAttachment } from '@/views/market/task/interface'
 
 const { t } = i18n.global
 
@@ -42,6 +42,7 @@ interface TaskAddParams {
 	tag_ids: number[]
 	tag_logic: string
 	variables?: Record<string, string>
+	attachments?: TaskAttachment[]
 }
 
 /**

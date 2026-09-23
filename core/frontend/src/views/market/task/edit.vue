@@ -177,6 +177,48 @@
 									</div>
 								</div>
 							</n-form-item>
+							<n-form-item :label="$t('market.task.edit.attachments.label')">
+								<div class="task-attachments">
+									<n-upload
+										:show-file-list="false"
+										:multiple="true"
+										@change="handleAttachmentChange">
+										<n-button>
+											<template #icon>
+												<div class="i-carbon-attachment"></div>
+											</template>
+											{{ $t('market.task.edit.attachments.add') }}
+										</n-button>
+									</n-upload>
+									<div
+										v-if="form.attachments.length"
+										class="attachment-list">
+										<div
+											v-for="(att, index) in form.attachments"
+											:key="index"
+											class="attachment-row">
+											<div class="i-carbon-document attachment-icon"></div>
+											<span class="attachment-name" :title="att.filename">
+												{{ att.filename }}
+											</span>
+											<span class="attachment-size">
+												{{ formatFileSize(att.size) }}
+											</span>
+											<n-button
+												text
+												type="error"
+												@click="handleRemoveAttachment(index)">
+												<template #icon>
+													<div class="i-carbon-close"></div>
+												</template>
+											</n-button>
+										</div>
+									</div>
+									<div class="attachment-tip">
+										{{ $t('market.task.edit.attachments.tip') }}
+									</div>
+								</div>
+							</n-form-item>
 							<n-form-item :label="$t('market.task.edit.testEmail')" :show-feedback="false">
 								<div class="flex-1 mr-10px">
 									<n-input
@@ -238,7 +280,8 @@ import { useElementBounding } from '@vueuse/core'
 
 import { confirm, isObject, Message } from '@/utils'
 import { addTask, getTaskDetails, sendTestEmail, updateTask } from '@/api/modules/market/task'
-import { Task } from './interface'
+import { Task, TaskAttachment } from './interface'
+import type { UploadFileInfo } from 'naive-ui'
 import { Template } from '../template/interface'
 
 import FromSelect from './components/FromSelect.vue'
@@ -280,6 +323,7 @@ const form = reactive({
 	tag_ids: [] as number[],
 	tag_logic: 'OR',
 	variables: {} as Record<string, string>,
+	attachments: [] as TaskAttachment[],
 })
 
 // 自定义变量列表 (inline, key/value pairs)
@@ -342,6 +386,83 @@ const syncVariables = () => {
 const initVariableList = () => {
 	const entries = Object.entries(form.variables || {})
 	variableList.value = entries.map(([key, value]) => ({ key, value }))
+}
+
+// ===== 附件 (Attachments) =====
+const MAX_ATTACHMENTS = 10
+const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024 // 15 MB per file
+const MAX_ATTACHMENT_TOTAL = 25 * 1024 * 1024 // 25 MB total
+const BLOCKED_ATTACHMENT_EXTS = new Set([
+	'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'vbs', 'js', 'jse', 'jar',
+	'sh', 'ps1', 'psm1', 'dll', 'app', 'pif', 'hta', 'wsf', 'reg',
+])
+
+// 读取文件为纯 base64 (去掉 data URI 前缀)
+const readFileAsBase64 = (file: File): Promise<string> => {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader()
+		reader.onload = () => {
+			const result = reader.result as string
+			const commaIdx = result.indexOf(',')
+			resolve(commaIdx !== -1 ? result.slice(commaIdx + 1) : result)
+		}
+		reader.onerror = () => reject(reader.error)
+		reader.readAsDataURL(file)
+	})
+}
+
+// n-upload change 处理：校验并读取文件
+const handleAttachmentChange = async ({ file }: { file: UploadFileInfo }) => {
+	const rawFile = file.file
+	if (!rawFile) return
+
+	// 数量限制
+	if (form.attachments.length >= MAX_ATTACHMENTS) {
+		Message.error(t('market.task.edit.attachments.tooMany'))
+		return
+	}
+
+	// 类型限制
+	const ext = rawFile.name.includes('.')
+		? rawFile.name.slice(rawFile.name.lastIndexOf('.') + 1).toLowerCase()
+		: ''
+	if (BLOCKED_ATTACHMENT_EXTS.has(ext)) {
+		Message.error(t('market.task.edit.attachments.blockedType', { name: rawFile.name }))
+		return
+	}
+
+	// 单文件大小
+	if (rawFile.size > MAX_ATTACHMENT_SIZE) {
+		Message.error(t('market.task.edit.attachments.tooLarge', { name: rawFile.name }))
+		return
+	}
+
+	// 总大小
+	const currentTotal = form.attachments.reduce((sum, a) => sum + (a.size || 0), 0)
+	if (currentTotal + rawFile.size > MAX_ATTACHMENT_TOTAL) {
+		Message.error(t('market.task.edit.attachments.totalTooLarge'))
+		return
+	}
+
+	const content = await readFileAsBase64(rawFile)
+	form.attachments.push({
+		filename: rawFile.name,
+		content_type: rawFile.type || 'application/octet-stream',
+		size: rawFile.size,
+		content,
+	})
+}
+
+// 移除附件
+const handleRemoveAttachment = (index: number) => {
+	form.attachments.splice(index, 1)
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes: number): string => {
+	if (bytes < 1024) return `${bytes} B`
+	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+	return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 /**
@@ -564,6 +685,7 @@ const getParams = () => {
 		tag_ids: form.tag_ids,
 		tag_logic: form.tag_logic,
 		variables: form.variables,
+		attachments: form.attachments,
 	}
 }
 
@@ -620,6 +742,12 @@ const initForm = async () => {
 		form.remark = res.remark
 		form.tag_logic = res.tag_logic
 		form.variables = res.variables || {}
+		form.attachments = (res.attachments || []).map(a => ({
+			filename: a.filename,
+			content_type: a.content_type,
+			size: a.size,
+			path: a.path,
+		}))
 		initVariableList()
 		nextTick(() => {
 			form.tag_ids = res.tag_ids
@@ -722,6 +850,50 @@ initForm()
 	}
 
 	.variable-tip {
+		margin-top: 4px;
+		font-size: 12px;
+		color: var(--text-color-3);
+	}
+}
+
+.task-attachments {
+	width: 100%;
+
+	.attachment-list {
+		margin-top: 8px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.attachment-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 8px;
+		border-radius: 4px;
+		background: var(--action-color, rgba(0, 0, 0, 0.04));
+	}
+
+	.attachment-icon {
+		flex-shrink: 0;
+		color: var(--text-color-3);
+	}
+
+	.attachment-name {
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.attachment-size {
+		flex-shrink: 0;
+		font-size: 12px;
+		color: var(--text-color-3);
+	}
+
+	.attachment-tip {
 		margin-top: 4px;
 		font-size: 12px;
 		color: var(--text-color-3);

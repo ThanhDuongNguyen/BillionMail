@@ -91,6 +91,17 @@ type EmailTask struct {
 	TagLogic        string            `json:"tag_logic"       dc:"Tag Logic (AND/OR)"`
 	UseTagFilter    int               `json:"use_tag_filter"  dc:"Use Tag Filter (0: no, 1: yes)"`
 	Variables       map[string]string `json:"variables"       dc:"Task Custom Variables" orm:"variables"`
+	AttachmentsRaw  string            `json:"-"               dc:"Attachments (JSON string - internal use)" orm:"attachments"`
+	Attachments     []AttachmentMeta  `json:"attachments"     dc:"Attachments (parsed array)"`
+}
+
+// AttachmentMeta describes a task attachment stored on disk.
+// The binary content is NOT stored here; only metadata + storage path.
+type AttachmentMeta struct {
+	Filename    string `json:"filename"     dc:"Original file name"`
+	ContentType string `json:"content_type" dc:"MIME content type"`
+	Size        int64  `json:"size"         dc:"File size in bytes"`
+	Path        string `json:"path"         dc:"Relative storage path (server side)"`
 }
 
 // MarshalJSON implements custom JSON marshaling to convert TagIdsRaw to TagIds array
@@ -112,6 +123,15 @@ func (e *EmailTask) MarshalJSON() ([]byte, error) {
 		}
 	}
 
+	// Parse AttachmentsRaw to Attachments if not already parsed
+	if e.AttachmentsRaw != "" && len(e.Attachments) == 0 {
+		var attachments []AttachmentMeta
+		err := json.Unmarshal([]byte(e.AttachmentsRaw), &attachments)
+		if err == nil {
+			aux.Attachments = attachments
+		}
+	}
+
 	return json.Marshal(aux)
 }
 
@@ -122,6 +142,14 @@ func (e *EmailTask) AfterFind() {
 		err := json.Unmarshal([]byte(e.TagIdsRaw), &tagIds)
 		if err == nil {
 			e.TagIds = tagIds
+		}
+	}
+
+	if e.AttachmentsRaw != "" {
+		var attachments []AttachmentMeta
+		err := json.Unmarshal([]byte(e.AttachmentsRaw), &attachments)
+		if err == nil {
+			e.Attachments = attachments
 		}
 	}
 }

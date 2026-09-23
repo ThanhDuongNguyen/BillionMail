@@ -16,7 +16,7 @@ import (
 func (c *ControllerV1) CreateTask(ctx context.Context, req *v1.CreateTaskReq) (res *v1.CreateTaskRes, err error) {
 	res = &v1.CreateTaskRes{}
 
-	if err = validateCreateTaskRequest(req); err != nil {
+	if err = validateCreateTaskRequestCtx(ctx, req); err != nil {
 		res.SetError(err)
 		return
 	}
@@ -73,6 +73,14 @@ func validateCreateTaskRequest(req *v1.CreateTaskReq) error {
 	}
 
 	return nil
+}
+
+// validateCreateTaskRequestCtx runs context-aware validations (e.g. attachments).
+func validateCreateTaskRequestCtx(ctx context.Context, req *v1.CreateTaskReq) error {
+	if err := validateCreateTaskRequest(req); err != nil {
+		return err
+	}
+	return batch_mail.ValidateAttachmentInputs(ctx, req.Attachments)
 }
 
 // variableKeyRegex allows only alphanumeric characters and underscores for variable keys.

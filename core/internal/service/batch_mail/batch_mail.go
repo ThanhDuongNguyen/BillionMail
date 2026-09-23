@@ -113,6 +113,10 @@ func DeleteTask(ctx context.Context, id int) error {
 	_, err := g.DB().Model("email_tasks").
 		Where("id", id).
 		Delete()
+	if err == nil {
+		// Best-effort cleanup of stored attachment files.
+		RemoveTaskAttachments(id)
+	}
 	return err
 }
 
@@ -430,12 +434,26 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			"tag_ids":         tagIdsJson,
 			"tag_logic":       req.TagLogic,
 			"variables":       req.Variables,
+			"attachments":     "[]",
 		})
 		if e != nil {
 			return gerror.New(public.LangCtx(ctx, "Failed to create task {}", e.Error()))
 		}
 		id64, _ := res.LastInsertId()
 		taskId = int(id64)
+
+		// Save attachments to disk and persist their metadata.
+		if len(req.Attachments) > 0 {
+			attachments, e2 := SaveTaskAttachments(ctx, taskId, req.Attachments)
+			if e2 != nil {
+				return e2
+			}
+			if _, e2 = tx.Ctx(ctx).Model("email_tasks").Where("id", taskId).Data(g.Map{
+				"attachments": MarshalAttachments(attachments),
+			}).Update(); e2 != nil {
+				return gerror.New(public.LangCtx(ctx, "Failed to save task attachments: {}", e2.Error()))
+			}
+		}
 
 		var abnormalRecipients []struct {
 			Recipient string `json:"recipient"`
@@ -507,6 +525,10 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 		return nil
 	})
 	if err != nil {
+		// Clean up any attachment files written before the transaction failed.
+		if taskId > 0 {
+			RemoveTaskAttachments(taskId)
+		}
 		return 0, err
 	}
 

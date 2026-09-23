@@ -336,6 +336,15 @@
 					"add": "添加变量",
 					"tip": "在模板中使用: {'{{'} .Task.变量名 {'}}'}"
 				},
+				"attachments": {
+					"label": "附件",
+					"add": "添加附件",
+					"tip": "最多 10 个文件，单个文件最大 15 MB，总大小最大 25 MB。不允许上传可执行文件。",
+					"tooLarge": "文件 {name} 太大（最大 15 MB）",
+					"tooMany": "最多只能添加 10 个附件",
+					"totalTooLarge": "附件总大小超过 25 MB",
+					"blockedType": "不允许的文件类型: {name}"
+				},
 				"preview": {
 					"empty": "请选择邮件模板查看预览"
 				},

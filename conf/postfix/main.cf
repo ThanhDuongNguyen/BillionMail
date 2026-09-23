@@ -79,3 +79,10 @@ message_size_limit = 102400000
 
 # User Overrides-configuration
 myhostname = localhost
+
+# Disable SMTPUTF8: some relays (e.g. Amazon SES) do not advertise the
+# SMTPUTF8 extension, which causes mail to bounce with
+# "SMTPUTF8 is required, but was not offered by host ...".
+# Subject and display-name headers are already RFC 2047 (Q-)encoded by the
+# app, so disabling SMTPUTF8 does not affect UTF-8 content delivery.
+smtputf8_enable = no

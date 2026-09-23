@@ -334,6 +334,15 @@
 					"add": "Add variable",
 					"tip": "Use in templates: {'{{'} .Task.variable_name {'}}'}"
 				},
+				"attachments": {
+					"label": "Attachments",
+					"add": "Add attachment",
+					"tip": "Up to 10 files, 15 MB each, 25 MB total. Executable files are not allowed.",
+					"tooLarge": "File {name} is too large (max 15 MB)",
+					"tooMany": "You can attach at most 10 files",
+					"totalTooLarge": "Total attachment size exceeds 25 MB",
+					"blockedType": "File type is not allowed: {name}"
+				},
 				"preview": {
 					"empty": "Please select an email template to preview"
 				},
